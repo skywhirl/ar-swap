@@ -53,8 +53,6 @@
                 </a>
 
               </section>
-
-             
             
           <section v-if="!arTxnView" > 
 
@@ -68,7 +66,7 @@
 
          
               <h2 class="subtitle">
-                Enter Arweave address for reciving AR after swap (ETH - AR)
+                Enter Arweave address for receiving AR after swap (ETH - AR)
               </h2>
 
               <b-field label="">
@@ -184,7 +182,7 @@ export default {
     this.getPrices()
     this.getSwapPoolBalance()
     this.loadWeb3()
-    //this.getEthTxns()
+    this.getEthTxns()
     this.getArSwapTxns()
 
 
@@ -250,10 +248,10 @@ export default {
             value:  web3.toWei(amount.toFixed(5), 'ether'), 
             gasPrice: web3.toWei('5', 'gwei'),
             gas: 100000,
-            data: web3.toHex('AR_5EN4sYqRlw0yKdR3lpBlZWHvfo520T0u1SNhwSJmG4g')
+            data: web3.toHex('AR_'+ $this.arAddr)
                 }, function(err, transactionHash) {
           if (!err) {
-            console.log(transactionHash + " success" + $this.arUsd); 
+            console.log(transactionHash + " success"); 
             $this.swapEthTxn = transactionHash
           }  
         });
@@ -264,7 +262,6 @@ export default {
     async getSwapPoolBalance() {
 
        arweave.wallets.getBalance(this.arSwapPoolAddr).then((balance) => {
-          console.log('balance :' + arweave.ar.winstonToAr(balance))
           this.arSwapPoolBalance = arweave.ar.winstonToAr(balance)
           })
 
@@ -289,29 +286,31 @@ export default {
 
     async getArSwapTxns() { 
 
-       const txIds = await arweave.arql({
+      let $this = this 
+      web3.eth.getAccounts( async function(error, accounts) {
+
+        const txIds = await arweave.arql({
               op: "and",
               expr1: {
                 op: "equals",
                 expr1: "from",
-                expr2: this.arAddr
+                expr2: $this.arSwapPoolAddr
               },
               expr2: {
                 op: "equals",
                   expr1: "txn-eth-addr",
-                  expr2: web3.eth.accounts[0]
+                  expr2: accounts[0]
                 
               }
         })
 
         txIds.forEach(tx_id => {
-          this.arTxnData.unshift({txn_id: '<a href="https://viewblock.io/arweave/tx/'+ tx_id +'"  target="_blank"> '+tx_id+'</a>'
-                        
+          $this.arTxnData.unshift({txn_id: '<a href="https://viewblock.io/arweave/tx/'+ tx_id +'"  target="_blank"> '+tx_id+'</a>'            
           })
           
-        }); 
+        })        
 
-        //console.log(txIds)
+      })
 
     },
 
